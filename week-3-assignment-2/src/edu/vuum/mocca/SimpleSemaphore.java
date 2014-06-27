@@ -18,7 +18,7 @@ public class SimpleSemaphore {
      * Define a ReentrantLock to protect the critical section.
      */
     // TODO - you fill in here
-	private ReentrantLock mLock;
+	final private ReentrantLock mLock;
 
     /**
      * Define a Condition that waits while the number of permits is 0.
@@ -31,7 +31,7 @@ public class SimpleSemaphore {
      */
     // TODO - you fill in here.  Make sure that this data member will
     // ensure its values aren't cached by multiple Threads..
-	private int mPermits;
+	private volatile int mPermits;
 
     public SimpleSemaphore(int permits, boolean fair) {
         // TODO - you fill in here to initialize the SimpleSemaphore,
@@ -50,13 +50,12 @@ public class SimpleSemaphore {
         // TODO - you fill in here.
 		mLock.lockInterruptibly();
     	try {
-    		while (mPermits == 0) {
+    		while (mPermits <= 0) {
     			mCondition.await();
     		}
     		mPermits -= 1;
-    	} catch (InterruptedException e) {
-    		e.printStackTrace();
-    	} finally {
+    	} 
+    	finally {
     		mLock.unlock();
     	}
     }
@@ -69,7 +68,7 @@ public class SimpleSemaphore {
         // TODO - you fill in here.
     	mLock.lock();
     	try {
-    		while (mPermits == 0) {
+    		while (mPermits <= 0) {
     			mCondition.awaitUninterruptibly();
     		}
     		mPermits -= 1;
@@ -86,7 +85,9 @@ public class SimpleSemaphore {
     	mLock.lock();
     	try {
     		mPermits += 1;
-    		mCondition.signalAll();
+    		if(mPermits > 0){
+    			mCondition.signal();
+    		}
     	} finally {
     		mLock.unlock();
     	}
